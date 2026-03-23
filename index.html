@@ -446,4 +446,115 @@
         }
     </style>
   </head>
-  
+  <body>
+    <div class="bg-gradient"></div>
+    
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">⚡ Michael FX Journal</div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="saveJournal()">💾 Save</button>
+                <button class="btn btn-secondary" onclick="exportCSV()">📊 Export</button>
+                <button class="btn btn-secondary" onclick="clearAll()">🗑️ Clear</button>
+                <button class="btn btn-gold" id="premiumBtn" onclick="handlePremiumClick()">🔓 Unlock Premium</button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="dashboard" id="dashboard">
+        <div class="stat-card">
+            <div class="stat-label">Total Trades</div>
+            <div class="stat-value cyan" id="totalTrades">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value success" id="winRate">0%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Profit</div>
+            <div class="stat-value gold" id="totalProfit">$0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Consistency Score</div>
+            <div class="stat-value cyan" id="consistencyScore">0%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Longest Trade</div>
+            <div class="stat-value" id="longestTrade">00:00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Shortest Trade</div>
+            <div class="stat-value" id="shortestTrade">00:00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Best Strategy</div>
+            <div class="stat-value gold" id="bestStrategy">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Strategy Win Rate</div>
+            <div class="stat-value success" id="strategyWinRate">0%</div>
+        </div>
+    </div>
+          <div class="table-container">
+        <div class="table-wrapper">
+            <table id="journalTable">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Pair</th>
+                        <th>Strategy</th>
+                        <th>Rules</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Running</th>
+                        <th>Entry</th>
+                        <th>SL</th>
+                        <th>TP</th>
+                        <th>Profit $</th>
+                        <th>Risk %</th>
+                        <th>Win</th>
+                        <th>Loss</th>
+                        <th>Lot</th>
+                        <th>Pips</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Generated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Premium Modal -->
+    <div class="modal-overlay" id="premiumModal">
+        <div class="modal">
+            <div class="modal-icon">🔒</div>
+            <h2>Premium Locked</h2>
+            <p>Upgrade to the full 1,000-Day Michael FX Journal for just $3</p>
+            
+            <div class="payment-info">
+                <div class="payment-label">TRC20:</div>
+                TUzxdv7uv4DXZkDaYeSDRz4NTfnXQ92uim
+                <div class="payment-label" style="margin-top: 0.5rem;">ERC20:</div>
+                0x33a945940D4f3FC0909dB362f1470331c0317e0D
+            </div>
+            
+            <a href="https://wa.me/qr/3CKSVZKTJMRBM1" class="whatsapp-btn" target="_blank">
+                📱 Send Receipt on WhatsApp
+            </a>
+            
+            <input type="password" class="pin-input" id="unlockPin" placeholder="ENTER PIN" maxlength="12">
+            <button class="btn btn-gold" style="width: 100%; margin-top: 0.5rem;" onclick="checkUnlock()">
+                Unlock Now
+            </button>
+            
+            <button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="closePremiumModal()">
+                Cancel
+            </button>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">Saved successfully!</div>
+
+    <script>
+        
