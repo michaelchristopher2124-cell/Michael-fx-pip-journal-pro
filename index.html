@@ -811,4 +811,63 @@
             document.getElementById('bestStrategy').textContent = bestStrategy;
             document.getElementById('strategyWinRate').textContent = bestWinRate.toFixed(1) + '%';
         }
+                // NEW: Handle Premium Button Click
+        function handlePremiumClick() {
+            if (state.isUnlocked) {
+                showToast('Premium already active! ✅');
+                return;
+            }
+            showPremiumModal();
+        }
+
+        // Premium Features
+        function showPremiumModal() {
+            // Double-check if already unlocked
+            if (state.isUnlocked) {
+                showToast('Premium already active! ✅');
+                return;
+            }
+            document.getElementById('premiumModal').classList.add('active');
+        }
+
+        function closePremiumModal() {
+            document.getElementById('premiumModal').classList.remove('active');
+            document.getElementById('unlockPin').value = '';
+        }
+
+        function checkUnlock() {
+            const pin = document.getElementById('unlockPin').value;
+            if (pin === 'KILLZONE2026') {
+                state.isUnlocked = true;
+                localStorage.setItem('michaelFX_unlocked', 'true');
+                unlockAllRows();
+                updatePremiumUI();
+                closePremiumModal();
+                showToast('Premium Activated! ✅');
+            } else {
+                showToast('Invalid PIN ❌');
+                document.getElementById('unlockPin').value = '';
+                document.getElementById('unlockPin').focus();
+            }
+        }
+
+        function unlockAllRows() {
+            const lockedRows = document.querySelectorAll('tr.locked');
+            lockedRows.forEach(row => {
+                row.classList.remove('locked');
+                row.querySelectorAll('input, select').forEach(el => el.disabled = false);
+            });
+        }
+
+        function updatePremiumUI() {
+            const btn = document.getElementById('premiumBtn');
+            if (state.isUnlocked) {
+                btn.textContent = 'Premium Active ✅';
+                btn.classList.remove('btn-gold');
+                btn.classList.add('btn-primary');
+                btn.disabled = true;
+                // Remove the onclick handler since it's no longer needed
+                btn.removeAttribute('onclick');
+            }
+        }
         
