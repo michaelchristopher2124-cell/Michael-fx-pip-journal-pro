@@ -997,4 +997,41 @@
             window.URL.revokeObjectURL(url);
             showToast('CSV Exported! 📊');
         }
-        
+              // Utilities
+        let saveTimeout;
+        function debouncedSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveJournal, 1000);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('premiumModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closePremiumModal();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePremiumModal();
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveJournal();
+            }
+        });
+
+        // Allow Enter key to submit PIN
+        document.getElementById('unlockPin').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkUnlock();
+            }
+        });
+    </script>
+</body>
+</html>
+
