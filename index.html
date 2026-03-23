@@ -557,4 +557,117 @@
     <div class="toast" id="toast">Saved successfully!</div>
 
     <script>
+             // State Management
+        const state = {
+            isUnlocked: localStorage.getItem('michaelFX_unlocked') === 'true',
+            trades: JSON.parse(localStorage.getItem('michaelFX_trades') || '[]'),
+            maxFreeRows: 5
+        };
+
+        // Asset Class Definitions
+        const assetClasses = {
+            'EURUSD': { type: 'forex', multiplier: 10000, profitMultiplier: 10 },
+            'GBPUSD': { type: 'forex', multiplier: 10000, profitMultiplier: 10 },
+            'USDJPY': { type: 'jpy', multiplier: 100, profitMultiplier: 10 },
+            'XAUUSD': { type: 'gold', multiplier: 10, profitMultiplier: 10 },
+            'US30': { type: 'indices', multiplier: 1, profitMultiplier: 1 },
+            'NAS100': { type: 'indices', multiplier: 1, profitMultiplier: 1 },
+            'Volatility 75': { type: 'synthetic', multiplier: 1, profitMultiplier: 1 },
+            'Boom 1000': { type: 'synthetic', multiplier: 1, profitMultiplier: 1 }
+        };
+
+        const pairs = Object.keys(assetClasses);
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTable();
+            updatePremiumUI();
+            loadSavedData();
+            updateDashboard();
+        });
+
+        // Initialize Table with 1000 Rows
+        function initializeTable() {
+            const tbody = document.getElementById('tableBody');
+            const fragment = document.createDocumentFragment();
+            
+            for (let i = 1; i <= 1000; i++) {
+                const row = createRow(i);
+                fragment.appendChild(row);
+            }
+            
+            tbody.appendChild(fragment);
+        }
+                // Create Table Row
+        function createRow(day) {
+            const tr = document.createElement('tr');
+            tr.dataset.day = day;
+            
+            if (!state.isUnlocked && day > state.maxFreeRows) {
+                tr.classList.add('locked');
+            }
+            
+            const isLocked = !state.isUnlocked && day > state.maxFreeRows;
+            
+            tr.innerHTML = `
+                <td>${day}</td>
+                <td>
+                    <select class="pair-select" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}>
+                        ${pairs.map(p => `<option value="${p}">${p}</option>`).join('')}
+                    </select>
+                </td>
+                <td><input type="text" class="strategy" placeholder="Strategy" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="checkbox" class="rules" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="time" class="time-in" onchange="calculateRunningTime(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="time" class="time-out" onchange="calculateRunningTime(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="text" class="running-time readonly" readonly tabindex="-1"></td>
+                <td><input type="number" class="entry" step="0.00001" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="number" class="sl" step="0.00001" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="number" class="tp" step="0.00001" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="number" class="profit readonly" readonly tabindex="-1"></td>
+                <td><input type="number" class="risk" step="0.01" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="checkbox" class="win" onchange="handleWinLoss(${day}, 'win')" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="checkbox" class="loss" onchange="handleWinLoss(${day}, 'loss')" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="number" class="lot-size" step="0.01" onchange="handleInput(${day})" ${isLocked ? 'disabled' : ''}></td>
+                <td><input type="number" class="pips readonly" readonly tabindex="-1"></td>
+            `;
+            
+            return tr;
+        }
+
+        // Handle Input Changes
+        function handleInput(day) {
+            if (!state.isUnlocked && day > state.maxFreeRows) {
+                showPremiumModal();
+                return;
+            }
+            debouncedSave();
+        }
+
+        // Handle Win/Loss Checkboxes
+        function handleWinLoss(day, type) {
+            if (!state.isUnlocked && day > state.maxFreeRows) {
+                showPremiumModal();
+                return;
+            }
+            
+            const row = document.querySelector(`tr[data-day="${day}"]`);
+            const winCheckbox = row.querySelector('.win');
+            const lossCheckbox = row.querySelector('.loss');
+            
+            if (type === 'win') {
+                if (winCheckbox.checked) {
+                    lossCheckbox.checked = false;
+                    calculateTrade(day, 'win');
+                }
+            } else {
+                if (lossCheckbox.checked) {
+                    winCheckbox.checked = false;
+                    calculateTrade(day, 'loss');
+                }
+            }
+            
+            updateDashboard();
+            debouncedSave();
+                                                                                                 }
         
