@@ -669,5 +669,56 @@
             
             updateDashboard();
             debouncedSave();
-                                                                                                 }
+        }                                                                                          }
+        // Calculate Running Time
+        function calculateRunningTime(day) {
+            const row = document.querySelector(`tr[data-day="${day}"]`);
+            const timeIn = row.querySelector('.time-in').value;
+            const timeOut = row.querySelector('.time-out').value;
+            const runningTimeInput = row.querySelector('.running-time');
+            
+            if (timeIn && timeOut) {
+                const [h1, m1] = timeIn.split(':').map(Number);
+                const [h2, m2] = timeOut.split(':').map(Number);
+                
+                let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+                if (diff < 0) diff += 24 * 60; // Handle overnight
+                
+                const hours = Math.floor(diff / 60);
+                const minutes = diff % 60;
+                runningTimeInput.value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+                
+                updateDashboard();
+            }
+            
+            debouncedSave();
+        }
+
+        // Calculate Trade Metrics
+        function calculateTrade(day, outcome) {
+            const row = document.querySelector(`tr[data-day="${day}"]`);
+            const pair = row.querySelector('.pair-select').value;
+            const entry = parseFloat(row.querySelector('.entry').value) || 0;
+            const sl = parseFloat(row.querySelector('.sl').value) || 0;
+            const tp = parseFloat(row.querySelector('.tp').value) || 0;
+            const lotSize = parseFloat(row.querySelector('.lot-size').value) || 0;
+            const pipsInput = row.querySelector('.pips');
+            const profitInput = row.querySelector('.profit');
+            
+            if (!entry || !lotSize) return;
+            
+            const asset = assetClasses[pair];
+            let exit = outcome === 'win' ? tp : sl;
+            if (!exit) return;
+            
+            let pips = Math.abs(entry - exit) * asset.multiplier;
+            let profit = pips * lotSize * asset.profitMultiplier;
+            
+            if (outcome === 'loss') {
+                profit = -Math.abs(profit);
+            }
+            
+            pipsInput.value = pips.toFixed(2);
+            profitInput.value = profit.toFixed(2);
+        }
         
