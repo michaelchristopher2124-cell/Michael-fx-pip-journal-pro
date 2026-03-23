@@ -721,4 +721,94 @@
             pipsInput.value = pips.toFixed(2);
             profitInput.value = profit.toFixed(2);
         }
+                // Update Dashboard Statistics
+        function updateDashboard() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            let totalTrades = 0;
+            let wins = 0;
+            let losses = 0;
+            let totalProfit = 0;
+            let maxProfit = 0;
+            let longestTrade = 0;
+            let shortestTrade = Infinity;
+            const strategyStats = {};
+            
+            rows.forEach(row => {
+                const profit = parseFloat(row.querySelector('.profit')?.value) || 0;
+                const isWin = row.querySelector('.win')?.checked;
+                const isLoss = row.querySelector('.loss')?.checked;
+                const strategy = row.querySelector('.strategy')?.value;
+                const runningTime = row.querySelector('.running-time')?.value;
+                
+                if (profit !== 0 || isWin || isLoss) {
+                    totalTrades++;
+                    totalProfit += profit;
+                    
+                    if (profit > maxProfit) maxProfit = profit;
+                    
+                    if (isWin) {
+                        wins++;
+                        if (strategy) {
+                            if (!strategyStats[strategy]) strategyStats[strategy] = { wins: 0, total: 0 };
+                            strategyStats[strategy].wins++;
+                            strategyStats[strategy].total++;
+                        }
+                    } else if (isLoss) {
+                        losses++;
+                        if (strategy) {
+                            if (!strategyStats[strategy]) strategyStats[strategy] = { wins: 0, total: 0 };
+                            strategyStats[strategy].total++;
+                        }
+                    }
+                    
+                    if (runningTime && runningTime !== '00:00') {
+                        const [h, m] = runningTime.split(':').map(Number);
+                        const minutes = h * 60 + m;
+                        if (minutes > longestTrade) longestTrade = minutes;
+                        if (minutes < shortestTrade) shortestTrade = minutes;
+                    }
+                }
+            });
+            
+            // Update UI
+            document.getElementById('totalTrades').textContent = totalTrades;
+            document.getElementById('winRate').textContent = totalTrades ? ((wins / totalTrades) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('totalProfit').textContent = '$' + totalProfit.toFixed(2);
+            
+            // Consistency Score
+            let consistency = 0;
+            if (totalProfit > 0 && maxProfit > 0) {
+                consistency = (1 - (maxProfit / totalProfit)) * 100;
+                if (consistency < 0) consistency = 0;
+            }
+            document.getElementById('consistencyScore').textContent = consistency.toFixed(1) + '%';
+            
+            // Longest/Shortest Trade
+            const formatTime = (minutes) => {
+                if (minutes === 0 || minutes === Infinity) return '00:00';
+                const h = Math.floor(minutes / 60);
+                const m = minutes % 60;
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            };
+            
+            document.getElementById('longestTrade').textContent = formatTime(longestTrade);
+            document.getElementById('shortestTrade').textContent = formatTime(shortestTrade === Infinity ? 0 : shortestTrade);
+            
+            // Best Strategy
+            let bestStrategy = '-';
+            let bestWinRate = 0;
+            
+            Object.entries(strategyStats).forEach(([strat, stats]) => {
+                if (stats.total > 0) {
+                    const winRate = (stats.wins / stats.total) * 100;
+                    if (winRate > bestWinRate) {
+                        bestWinRate = winRate;
+                        bestStrategy = strat;
+                    }
+                }
+            });
+            
+            document.getElementById('bestStrategy').textContent = bestStrategy;
+            document.getElementById('strategyWinRate').textContent = bestWinRate.toFixed(1) + '%';
+        }
         
