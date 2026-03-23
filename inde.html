@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0e1a">
+    <title>Michael FX Journal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --cyan: #00d4ff;
+            --cyan-glow: rgba(0, 212, 255, 0.3);
+            --gold: #ffd700;
+            --gold-glow: rgba(255, 215, 0, 0.4);
+            --danger: #ef4444;
+            --success: #10b981;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            max-width: 100vw;
+            padding: 12px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(255,215,0,0.05) 100%);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--cyan), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--cyan), var(--gold));
+        }
+        
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+        
+        .stat-value.gold {
+            color: var(--gold);
+        }
+        
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .btn {
+            padding: 10px 6px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cyan), #0891b2);
+            color: #000;
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .btn-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .btn-premium {
+            background: linear-gradient(135deg, var(--gold), #b45309);
+            color: #000;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+        
+        .btn-premium.active {
+            background: var(--success);
+            animation: none;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px var(--gold-glow); }
+            50% { box-shadow: 0 0 30px var(--gold-glow), 0 0 40px var(--gold-glow); }
+        }
+        
+        .table-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            max-height: 70vh;
+            position: relative;
+        }
+        
+        .table-container.locked::after {
+            content: '🔒 PREVIEW MODE - Rows 1-5 Only';
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, var(--gold), #b45309);
+            color: #000;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        
+        table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+        }
+        
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg-secondary);
+        }
+        
+        th {
+            padding: 10px 6px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--cyan);
+            border-bottom: 2px solid var(--cyan);
+            min-width: 60px;
+            font-size: 0.65rem;
+        }
+        
+        td {
+            padding: 6px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        input, select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 4px;
+            color: var(--text-primary);
+            font-size: 0.7rem;
+            text-align: center;
+        }
+        
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--cyan);
+            cursor: pointer;
+        }
+        
+        input[type="number"] {
+            width: 60px;
+        }
+        
+        input[type="time"] {
+            width: 70px;
+        }
+        
+        select {
+            width: 90px;
+            cursor: pointer;
+        }
+        
+        .read-only {
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--gold);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 90vw;
+            width: 360px;
+            text-align: center;
+            box-shadow: 0 0 40px var(--gold-glow);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+        
+        .modal h2 {
+            color: var(--gold);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .modal p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .payment-info {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 16px 0;
+            font-family: monospace;
+            font-size: 0.7rem;
+            word-break: break-all;
+            text-align: left;
+        }
+        
+        .payment-info strong {
+            color: var(--cyan);
+        }
+        
+        .whatsapp-btn {
+            display: inline-block;
+            background: #25d366;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 8px 0;
+            font-size: 0.85rem;
+        }
+        
+        .pin-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 4px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            color: var(--gold);
+            margin: 12px 0;
+        }
+        
+        .unlock-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--gold), #b45309);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--cyan);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--cyan);
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .stat-value {
+                font-size: 0.95rem;
+            }
+            
+            .actions {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            th, td {
+                padding: 4px;
+                font-size: 0.6rem;
+            }
+            
+            input, select {
+                padding: 2px;
+                font-size: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>⚡ Michael FX Journal</h1>
+            <p>Professional Trading Analytics & Journal</p>
+        </header>
+        
+        <div class="dashboard" id="dashboard">
+            <div class="stat-card">
+                <div class="stat-label">Total Trades</div>
+                <div class="stat-value" id="totalTrades">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Win Rate %</div>
+                <div class="stat-value" id="winRate">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Profit ($)</div>
+                <div class="stat-value gold" id="totalProfit">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Consistency Score</div>
+                <div class="stat-value" id="consistencyScore">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Longest Trade</div>
+                <div class="stat-value" id="longestTrade">--:--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Shortest Trade</div>
+                <div class="stat-value" id="shortestTrade">--:--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Best Strategy</div>
+                <div class="stat-value" id="bestStrategy">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Strategy Win Rate</div>
+                <div class="stat-value" id="strategyWinRate">0%</div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-primary" onclick="saveJournal()">💾 Save</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑️ Clear</button>
+            <button class="btn btn-success" onclick="exportCSV()">📊 Export</button>
+            <button class="btn btn-premium" id="premiumBtn" onclick="showPremiumModal()">🔓 Unlock</button>
+        </div>
+        
+        <div class="table-container" id="tableContainer">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Loading Journal...</div>
+            </div>
+            <table id="journalTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Pair</th>
+                        <th>Strategy</th>
+                        <th>Rules?</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Running</th>
+                        <th>Entry</th>
+                        <th>SL</th>
+                        <th>TP</th>
+                        <th>Profit $</th>
+                        <th>Risk %</th>
+                        <th>Win</th>
+                        <th>Loss</th>
+                        <th>Lot</th>
+                        <th>Pips</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="premiumModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closePremiumModal()">×</button>
+            <h2>🔒 Premium Locked</h2>
+            <p>Upgrade to the full 1,000-Day Michael FX Journal for just <strong style="color:var(--gold)">$3</strong></p>
+            
+            <div class="payment-info">
+                <strong>Send exactly $3 (USDT):</strong><br><br>
+                <strong>TRC20:</strong><br>
+                TUzxdv7uv4DXZkDaYeSDRz4NTfnXQ92uim<br><br>
+                <strong>ERC20:</strong><br>
+                0x33a945940D4f3FC0909dB362f1470331c0317e0D
+            </div>
+            
+            <a href="https://wa.me/qr/3CKSVZKTJMRBM1" class="whatsapp-btn" target="_blank">
+                📱 Send Receipt on WhatsApp
+            </a>
+            
+            <p style="margin-top:16px; font-size:0.75rem;">Or enter unlock code:</p>
+            <input type="password" class="pin-input" id="unlockPin" placeholder="ENTER CODE" maxlength="20">
+            <button class="unlock-btn" onclick="verifyUnlock()">UNLOCK NOW</button>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            UNLOCK_CODE: 'KILLZONE2026',
+            FREE_ROWS: 5,
+            TOTAL_ROWS: 1000
+        };
+        
+        let appState = {
+            isUnlocked: false,
+            trades: []
+        };
+        
+        const ASSET_CLASSES = {
+            'EURUSD': { type: 'forex', multiplier: 10000, profitFactor: 10 },
+            'GBPUSD': { type: 'forex', multiplier: 10000, profitFactor: 10 },
+            'USDJPY': { type: 'jpy', multiplier: 100, profitFactor: 10 },
+            'XAUUSD': { type: 'gold', multiplier: 10, profitFactor: 10 },
+            'US30': { type: 'index', multiplier: 1, profitFactor: 1 },
+            'NAS100': { type: 'index', multiplier: 1, profitFactor: 1 },
+            'Volatility 75': { type: 'synthetic', multiplier: 1, profitFactor: 1 },
+            'Boom 1000': { type: 'synthetic', multiplier: 1, profitFactor: 1 }
+        };
+        
+        const PAIRS = Object.keys(ASSET_CLASSES);
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            generateTable();
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('journalTable').style.display = 'table';
+                updateDashboard();
+            }, 500);
+        });
+        
+        function generateTable() {
+            const tbody = document.getElementById('tableBody');
+            const fragment = document.createDocumentFragment();
+            
+            for (let i = 1; i <= CONFIG.TOTAL_ROWS; i++) {
+                const row = createRow(i);
+                fragment.appendChild(row);
+            }
+            
+            tbody.appendChild(fragment);
+            applyLockState();
+        }
+        
+        function createRow(day) {
+            const tr = document.createElement('tr');
+            tr.dataset.day = day;
+            
+            const pairOptions = PAIRS.map(p => `<option value="${p}">${p}</option>`).join('');
+            
+            tr.innerHTML = `
+                <td>${day}</td>
+                <td><select class="pair-select" onchange="checkLock(${day}); saveTrade(${day})">${pairOptions}</select></td>
+                <td><input type="text" class="strategy" placeholder="Strategy" onchange="checkLock(${day}); saveTrade(${day})"></td>
+                <td><input type="checkbox" class="followed-rules" onchange="checkLock(${day}); saveTrade(${day})"></td>
+                <td><input type="time" class="time-in" onchange="checkLock(${day}); calculateRunningTime(${day}); saveTrade(${day})"></td>
+                <td><input type="time" class="time-out" onchange="checkLock(${day}); calculateRunningTime(${day}); saveTrade(${day})"></td>
+                <td><input type="text" class="running-time read-only" readonly></td>
+                <td><input type="number" step="0.00001" class="entry" placeholder="0.0" onchange="checkLock(${day}); saveTrade(${day})"></td>
+                <td><input type="number" step="0.00001" class="sl" placeholder="0.0" onchange="checkLock(${day}); saveTrade(${day})"></td>
+                <td><input type="number" step="0.00001" class="tp" placeholder="0.0" onchange="checkLock(${day}); saveTrade(${day})"></td>
+                <td><input type="number" step="0.01" class="profit read-only" readonly></td>
+                <td><input type="number" step="0.01" class="risk" placeholder="%" onchange="checkLock(${day}); saveTrade(${day})"></td>
+                <td><input type="checkbox" class="win" onchange="checkLock(${day}); handleWinLoss(${day}, 'win'); saveTrade(${day})"></td>
+                <td><input type="checkbox" class="loss" onchange="checkLock(${day}); handleWinLoss(${day}, 'loss'); saveTrade(${day})"></td>
+                <td><input type="number" step="0.01" class="lot-size" placeholder="0.0" onchange="checkLock(${day}); saveTrade(${day})"></td>
+                <td><input type="number" step="0.01" class="pips read-only" readonly></td>
+            `;
+            
+            return tr;
+        }
+        
+        function checkLock(day) {
+            if (!appState.isUnlocked && day > CONFIG.FREE_ROWS) {
+                showPremiumModal();
+                return false;
+            }
+            return true;
+        }
+        
+        function applyLockState() {
+            const container = document.getElementById('tableContainer');
+            const btn = document.getElementById('premiumBtn');
+            
+            if (appState.isUnlocked) {
+                container.classList.remove('locked');
+                btn.textContent = 'Premium Active ✅';
+                btn.classList.add('active');
+                btn.onclick = null;
+            } else {
+                container.classList.add('locked');
+                btn.textContent = 'Unlock Premium 🔓';
+            }
+        }
+        
+        function showPremiumModal() {
+            document.getElementById('premiumModal').classList.add('active');
+        }
+        
+        function closePremiumModal() {
+            document.getElementById('premiumModal').classList.remove('active');
+        }
+        
+        function verifyUnlock() {
+            const pin = document.getElementById('unlockPin').value;
+            if (pin === CONFIG.UNLOCK_CODE) {
+                appState.isUnlocked = true;
+                saveState();
+                applyLockState();
+                closePremiumModal();
+                alert('✅ Premium Unlocked! All 1000 rows are now accessible.');
+            } else {
+                alert('❌ Invalid unlock code. Please send $3 USDT to unlock.');
+            }
+        }
+        
+        function calculateRunningTime(day) {
+            const row = document.querySelector(`tr[data-day="${day}"]`);
+            const timeIn = row.querySelector('.time-in').value;
+            const timeOut = row.querySelector('.time-out').value;
+            
+            if (timeIn && timeOut) {
+                const start = new Date(`2000-01-01T${timeIn}`);
+                const end = new Date(`2000-01-01T${timeOut}`);
+                let diff = (end - start) / 1000 / 60;
+                
+                if (diff < 0) diff += 24 * 60;
+                
+                const hours = Math.floor(diff / 60);
+                const mins = Math.floor(diff % 60);
+                row.querySelector('.running-time').value = 
+                    `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+                
+                updateDashboard();
+            }
+        }
+        
+        function handleWinLoss(day, type) {
+            const row = document.querySelector(`tr[data-day="${day}"]`);
+            const winBox = row.querySelector('.win');
+            const lossBox = row.querySelector('.loss');
+            
+            if (type === 'win' && winBox.checked) {
+                lossBox.checked = false;
+                calculatePipsAndProfit(day, 'win');
+            } else if (type === 'loss' && lossBox.checked) {
+                winBox.checked = false;
+                calculatePipsAndProfit(day, 'loss');
+            }
+            
+            updateDashboard();
+        }
+        
+        function calculatePipsAndProfit(day, outcome) {
+            const row = document.querySelector(`tr[data-day="${day}"]`);
+            const pair = row.querySelector('.pair-select').value;
+            const entry = parseFloat(row.querySelector('.entry').value) || 0;
+            const sl = parseFloat(row.querySelector('.sl').value) || 0;
+            const tp = parseFloat(row.querySelector('.tp').value) || 0;
+            const lotSize = parseFloat(row.querySelector('.lot-size').value) || 0;
+            
+            if (!entry || !lotSize) return;
+            
+            const asset = ASSET_CLASSES[pair];
+            let exitPrice = outcome === 'win' ? tp : sl;
+            
+            if (!exitPrice) return;
+            
+            let pips = Math.abs(entry - exitPrice) * asset.multiplier;
+            let profit = pips * lotSize * asset.profitFactor;
+            
+            if (outcome === 'loss') profit = -profit;
+            
+            row.querySelector('.pips').value = pips.toFixed(2);
+            row.querySelector('.profit').value = profit.toFixed(2);
+        }
+        
+        function updateDashboard() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            let totalTrades = 0;
+            let wins = 0;
+            let losses = 0;
+            let totalProfit = 0;
+            let maxProfit = 0;
+            let longestMinutes = 0;
+            let shortestMinutes = Infinity;
+            let strategyStats = {};
+            
+            rows.forEach(row => {
+                const profit = parseFloat(row.querySelector('.profit').value) || 0;
+                const isWin = row.querySelector('.win').checked;
+                const isLoss = row.querySelector('.loss').checked;
+                const runningTime = row.querySelector('.running-time').value;
+                const strategy = row.querySelector('.strategy').value.trim();
+                
+                if (isWin || isLoss || profit !== 0) {
+                    totalTrades++;
+                    totalProfit += profit;
+                    
+                    if (profit > maxProfit) maxProfit = profit;
+                    
+                    if (isWin) wins++;
+                    if (isLoss) losses++;
+                    
+                    if (runningTime) {
+                        const [h, m] = runningTime.split(':').map(Number);
+                        const mins = h * 60 + m;
+                        if (mins > longestMinutes) longestMinutes = mins;
+                        if (mins < shortestMinutes) shortestMinutes = mins;
+                    }
+                    
+                    if (strategy) {
+                        if (!strategyStats[strategy]) {
+                            strategyStats[strategy] = { wins: 0, total: 0 };
+                        }
+                        strategyStats[strategy].total++;
+                        if (isWin) strategyStats[strategy].wins++;
+                    }
+                }
+            });
+            
+            document.getElementById('totalTrades').textContent = totalTrades;
+            document.getElementById('winRate').textContent = 
+                totalTrades > 0 ? ((wins / totalTrades) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('totalProfit').textContent = '$' + totalProfit.toFixed(2);
+            
+            let consistency = 0;
+            if (totalProfit > 0 && maxProfit > 0) {
+                consistency = (1 - (maxProfit / totalProfit)) * 100;
+                if (consistency < 0) consistency = 0;
+            }
+            document.getElementById('consistencyScore').textContent = consistency.toFixed(1) + '%';
+            
+            document.getElementById('longestTrade').textContent = 
+                longestMinutes > 0 ? formatMinutes(longestMinutes) : '--:--';
+            document.getElementById('shortestTrade').textContent = 
+                shortestMinutes !== Infinity ? formatMinutes(shortestMinutes) : '--:--';
+            
+            let bestStrategy = '--';
+            let bestWinRate = 0;
+            
+            for (const [strat, stats] of Object.entries(strategyStats)) {
+                if (stats.total >= 3) {
+                    const rate = (stats.wins / stats.total) * 100;
+                    if (rate > bestWinRate) {
+                        bestWinRate = rate;
+                        bestStrategy = strat;
+                    }
+                }
+            }
+            
+            document.getElementById('bestStrategy').textContent = bestStrategy;
+            document.getElementById('strategyWinRate').textContent = bestWinRate.toFixed(1) + '%';
+        }
+        
+        function formatMinutes(mins) {
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        }
+        
+        function saveTrade(day) {
+            const row = document.querySelector(`tr[data-day="${day}"]`);
+            const tradeData = {
+                day: day,
+                pair: row.querySelector('.pair-select').value,
+                strategy: row.querySelector('.strategy').value,
+                followedRules: row.querySelector('.followed-rules').checked,
+                timeIn: row.querySelector('.time-in').value,
+                timeOut: row.querySelector('.time-out').value,
+                runningTime: row.querySelector('.running-time').value,
+                entry: row.querySelector('.entry').value,
+                sl: row.querySelector('.sl').value,
+                tp: row.querySelector('.tp').value,
+                profit: row.querySelector('.profit').value,
+                risk: row.querySelector('.risk').value,
+                win: row.querySelector('.win').checked,
+                loss: row.querySelector('.loss').checked,
+                lotSize: row.querySelector('.lot-size').value,
+                pips: row.querySelector('.pips').value
+            };
+            
+            const existingIndex = appState.trades.findIndex(t => t.day === day);
+            if (existingIndex >= 0) {
+                appState.trades[existingIndex] = tradeData;
+            } else {
+                appState.trades.push(tradeData);
+            }
+            
+            saveState();
+        }
+        
+        function saveState() {
+            localStorage.setItem('michaelFXJournal', JSON.stringify(appState));
+        }
+        
+        function loadState() {
+            const saved = localStorage.getItem('michaelFXJournal');
+            if (saved) {
+                appState = JSON.parse(saved);
+                restoreTrades();
+            }
+        }
+        
+        function restoreTrades() {
+            appState.trades.forEach(trade => {
+                const row = document.querySelector(`tr[data-day="${trade.day}"]`);
+                if (row) {
+                    row.querySelector('.pair-select').value = trade.pair || PAIRS[0];
+                    row.querySelector('.strategy').value = trade.strategy || '';
+                    row.querySelector('.followed-rules').checked = trade.followedRules || false;
+                    row.querySelector('.time-in').value = trade.timeIn || '';
+                    row.querySelector('.time-out').value = trade.timeOut || '';
+                    row.querySelector('.running-time').value = trade.runningTime || '';
+                    row.querySelector('.entry').value = trade.entry || '';
+                    row.querySelector('.sl').value = trade.sl || '';
+                    row.querySelector('.tp').value = trade.tp || '';
+                    row.querySelector('.profit').value = trade.profit || '';
+                    row.querySelector('.risk').value = trade.risk || '';
+                    row.querySelector('.win').checked = trade.win || false;
+                    row.querySelector('.loss').checked = trade.loss || false;
+                    row.querySelector('.lot-size').value = trade.lotSize || '';
+                    row.querySelector('.pips').value = trade.pips || '';
+                }
+            });
+        }
+        
+        function saveJournal() {
+            saveState();
+            alert('✅ Journal saved successfully!');
+        }
+        
+        function clearAll() {
+            if (!appState.isUnlocked) {
+                showPremiumModal();
+                return;
+            }
+            
+            if (confirm('⚠️ Clear all trades? This cannot be undone.')) {
+                appState.trades = [];
+                saveState();
+                
+                document.querySelectorAll('#tableBody input').forEach(input => {
+                    if (input.type === 'checkbox') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                });
+                
+                document.querySelectorAll('.pair-select').forEach(select => {
+                    select.value = PAIRS[0];
+                });
+                
+                updateDashboard();
+                alert('🗑️ All data cleared.');
+            }
+        }
+        
+        function exportCSV() {
+            let csv = 'Day,Pair,Strategy,Followed Rules,Time In,Time Out,Running Time,Entry,SL,TP,Profit $,Risk %,Win,Loss,Lot Size,Pips\n';
+            
+            appState.trades.forEach(trade => {
+                csv += `${trade.day},${trade.pair},${trade.strategy},${trade.followedRules},${trade.timeIn},${trade.timeOut},${trade.runningTime},${trade.entry},${trade.sl},${trade.tp},${trade.profit},${trade.risk},${trade.win},${trade.loss},${trade.lotSize},${trade.pips}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Michael_FX_Journal_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        document.getElementById('premiumModal').addEventListener('click', (e) => {
+            if (e.target.id === 'premiumModal') closePremiumModal();
+        });
+    </script>
+</body>
+</html>
