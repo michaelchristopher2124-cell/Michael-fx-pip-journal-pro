@@ -871,3 +871,130 @@
             }
         }
         
+        // Data Persistence
+        function saveJournal() {
+            const data = [];
+            const rows = document.querySelectorAll('#tableBody tr');
+            
+            rows.forEach(row => {
+                const day = row.dataset.day;
+                const rowData = {
+                    day,
+                    pair: row.querySelector('.pair-select').value,
+                    strategy: row.querySelector('.strategy').value,
+                    rules: row.querySelector('.rules').checked,
+                    timeIn: row.querySelector('.time-in').value,
+                    timeOut: row.querySelector('.time-out').value,
+                    runningTime: row.querySelector('.running-time').value,
+                    entry: row.querySelector('.entry').value,
+                    sl: row.querySelector('.sl').value,
+                    tp: row.querySelector('.tp').value,
+                    profit: row.querySelector('.profit').value,
+                    risk: row.querySelector('.risk').value,
+                    win: row.querySelector('.win').checked,
+                    loss: row.querySelector('.loss').checked,
+                    lotSize: row.querySelector('.lot-size').value,
+                    pips: row.querySelector('.pips').value
+                };
+                data.push(rowData);
+            });
+            
+            localStorage.setItem('michaelFX_trades', JSON.stringify(data));
+            showToast('Journal Saved! 💾');
+        }
+
+        function loadSavedData() {
+            const saved = localStorage.getItem('michaelFX_trades');
+            if (!saved) return;
+            
+            const data = JSON.parse(saved);
+            data.forEach(rowData => {
+                const row = document.querySelector(`tr[data-day="${rowData.day}"]`);
+                if (row) {
+                    row.querySelector('.pair-select').value = rowData.pair || pairs[0];
+                    row.querySelector('.strategy').value = rowData.strategy || '';
+                    row.querySelector('.rules').checked = rowData.rules || false;
+                    row.querySelector('.time-in').value = rowData.timeIn || '';
+                    row.querySelector('.time-out').value = rowData.timeOut || '';
+                    row.querySelector('.running-time').value = rowData.runningTime || '';
+                    row.querySelector('.entry').value = rowData.entry || '';
+                    row.querySelector('.sl').value = rowData.sl || '';
+                    row.querySelector('.tp').value = rowData.tp || '';
+                    row.querySelector('.profit').value = rowData.profit || '';
+                    row.querySelector('.risk').value = rowData.risk || '';
+                    row.querySelector('.win').checked = rowData.win || false;
+                    row.querySelector('.loss').checked = rowData.loss || false;
+                    row.querySelector('.lot-size').value = rowData.lotSize || '';
+                    row.querySelector('.pips').value = rowData.pips || '';
+                }
+            });
+        }
+
+        function clearAll() {
+            if (!state.isUnlocked) {
+                showPremiumModal();
+                return;
+            }
+            
+            if (!confirm('Clear all data? This cannot be undone.')) return;
+            
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                row.querySelector('.pair-select').value = pairs[0];
+                row.querySelector('.strategy').value = '';
+                row.querySelector('.rules').checked = false;
+                row.querySelector('.time-in').value = '';
+                row.querySelector('.time-out').value = '';
+                row.querySelector('.running-time').value = '';
+                row.querySelector('.entry').value = '';
+                row.querySelector('.sl').value = '';
+                row.querySelector('.tp').value = '';
+                row.querySelector('.profit').value = '';
+                row.querySelector('.risk').value = '';
+                row.querySelector('.win').checked = false;
+                row.querySelector('.loss').checked = false;
+                row.querySelector('.lot-size').value = '';
+                row.querySelector('.pips').value = '';
+            });
+            
+            localStorage.removeItem('michaelFX_trades');
+            updateDashboard();
+            showToast('All Data Cleared! 🗑️');
+        }
+
+        function exportCSV() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            let csv = 'Day,Pair,Strategy,Followed Rules,Time In,Time Out,Running Time,Entry,SL,TP,Profit $,Risk %,Win,Loss,Lot Size,Pips\n';
+            
+            rows.forEach(row => {
+                const data = [
+                    row.dataset.day,
+                    row.querySelector('.pair-select').value,
+                    `"${row.querySelector('.strategy').value}"`,
+                    row.querySelector('.rules').checked ? 'Yes' : 'No',
+                    row.querySelector('.time-in').value,
+                    row.querySelector('.time-out').value,
+                    row.querySelector('.running-time').value,
+                    row.querySelector('.entry').value,
+                    row.querySelector('.sl').value,
+                    row.querySelector('.tp').value,
+                    row.querySelector('.profit').value,
+                    row.querySelector('.risk').value,
+                    row.querySelector('.win').checked ? 'Yes' : 'No',
+                    row.querySelector('.loss').checked ? 'Yes' : 'No',
+                    row.querySelector('.lot-size').value,
+                    row.querySelector('.pips').value
+                ];
+                csv += data.join(',') + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Michael_FX_Journal_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showToast('CSV Exported! 📊');
+        }
+        
